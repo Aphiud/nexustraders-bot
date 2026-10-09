@@ -103,6 +103,84 @@ environment yet:**
 > three values — App Builder injects them into your host environment for you
 > (never into the app source).
 
+## Bulk Purchase (Netlify deployment)
+
+Bulk Purchase is served by the Netlify Functions in `netlify/functions/`; it is
+available only when this static app is deployed with Netlify Functions. The
+separate Deriv App Builder Cloudflare BFF is not part of this repository, so its
+deployment does not receive these functions or secrets.
+
+### Server configuration
+
+Enable Netlify Identity for the site and use invite-only registration. Grant the
+`bulk-purchase` Identity role only to trusted operators who are allowed to submit
+trades. The function checks that role on every account-list and purchase request.
+Configure these variables in Netlify's site environment, never as `NEXT_PUBLIC_*`
+variables:
+
+```env
+DERIV_BULK_PURCHASE_APP_ID=your_deriv_app_id
+DERIV_BULK_PURCHASE_ACCOUNTS='[{"account_id":"VRTC1234567","label":"Demo account","account_type":"demo","token":"trade_scoped_demo_pat"},{"account_id":"CR1234567","label":"Real account","account_type":"real","token":"trade_scoped_real_pat"}]'
+```
+
+Each configured account needs its own trade-scoped Deriv PAT, paired with the
+account that PAT owns. The account list endpoint returns only account IDs,
+labels, and environment; it never returns a PAT. The purchase function builds
+Deriv's exact `contract_parameters` and `accounts` request body on the server and
+sends the `Deriv-App-ID` header. No OAuth bearer token is sent to Deriv's bulk
+endpoint. Deriv credentials are never logged. Configure values separately in
+each Netlify deploy context. Rotate a PAT in Deriv and update the corresponding
+server environment value if it is revoked or expires.
+
+### Demo use
+
+After deployment, sign in with an invited Netlify Identity user assigned the
+`bulk-purchase` role. Choose **Demo**, select one or more configured demo
+accounts, and enter a JSON object containing the options contract parameters
+accepted by Deriv. The same contract is submitted to every selected account.
+The endpoint accepts 1–100 account/token pairs; it does not accept different
+contracts per account in a single request. Deriv validates the contract fields.
+
+### Real-account safety
+
+Real accounts are shown only when configured as `real`; switching environments
+clears the account selection. Submitting a real purchase requires a separate
+confirmation. Keep real PATs limited to accounts and operators that are
+authorized for trading. A timeout or lost network response can occur after Deriv
+has processed a purchase, so the feature never retries automatically; check the
+account's contract activity before submitting again.
+
+### Changed files
+
+- `netlify/functions/bulk-purchase.ts` validates the request, checks the
+  Identity role, injects server-only account PATs, calls the documented Deriv
+  endpoint once, and returns sanitized per-account results.
+- `netlify/functions/bulk-purchase-accounts.ts` returns configured account
+  labels and IDs without exposing credentials.
+- `netlify/functions/_bulk-purchase-config.ts` validates the server-only account
+  mapping, PAT lengths, account types, and duplicate IDs for both functions.
+- `src/components/bulk-purchase/*` implements the UI, Identity login, validation,
+  real-account confirmation, duplicate-submit guard, and result display.
+- `src/utils/bulk-purchase.ts` contains request and response validation shared by
+  the UI and tests.
+- `src/pages/main/main.tsx` adds the control alongside the existing run controls
+  without using or changing the bot WebSocket lifecycle.
+- `netlify.toml` enables the function directory, and this section documents its
+  required server configuration and limitations.
+
+Run checks with:
+
+```bash
+npm test -- --runInBand
+npm run type-check
+npm run lint
+npm run build
+```
+
+The repository did not previously define a lint script; `npm run lint` checks
+the new Bulk Purchase stylesheet. The repository-wide Stylelint config currently
+reports existing errors in unrelated stylesheets.
+
 ## Branding & White-labeling
 
 Branding (logo, primary color, fonts, app name) is driven by **`brand.config.json`**,

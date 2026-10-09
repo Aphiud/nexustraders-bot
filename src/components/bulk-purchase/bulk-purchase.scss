@@ -1,0 +1,131 @@
+.bulk-purchase__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    padding: 1.6rem;
+    background: rgb(0 0 0 / 55%);
+}
+
+.bulk-purchase {
+    width: min(58rem, 100%);
+    max-height: min(90vh, 80rem);
+    overflow: auto;
+    padding: 2.4rem;
+    border-radius: 1.2rem;
+    color: var(--text-general);
+    background: var(--general-main-1);
+    box-shadow: 0 1.2rem 4rem rgb(0 0 0 / 25%);
+}
+
+.bulk-purchase__header,
+.bulk-purchase__identity,
+.bulk-purchase__account {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.bulk-purchase__header h2 { margin: 0; }
+
+.bulk-purchase__close {
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font-size: 2.4rem;
+    cursor: pointer;
+}
+
+.bulk-purchase__form {
+    display: grid;
+    gap: 1.6rem;
+    margin-top: 1.6rem;
+}
+
+.bulk-purchase__form > label {
+    display: grid;
+    gap: .6rem;
+    font-weight: 600;
+}
+
+.bulk-purchase__form input[type='email'],
+.bulk-purchase__form input[type='password'],
+.bulk-purchase__form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem;
+    border: 1px solid var(--border-normal);
+    border-radius: .6rem;
+    color: var(--text-general);
+    background: var(--general-main-1);
+    font: inherit;
+}
+
+.bulk-purchase__form textarea {
+    font-family: monospace;
+    resize: vertical;
+}
+
+.bulk-purchase__form fieldset {
+    display: grid;
+    gap: .8rem;
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--border-normal);
+    border-radius: .6rem;
+}
+
+.bulk-purchase__form legend {
+    padding: 0 .5rem;
+    font-weight: 600;
+}
+
+.bulk-purchase__radio {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+.bulk-purchase__account { justify-content: flex-start; }
+
+.bulk-purchase__account small {
+    margin-left: auto;
+    opacity: .7;
+}
+
+.bulk-purchase__identity button {
+    border: 0;
+    color: var(--brand-red-coral);
+    background: transparent;
+    cursor: pointer;
+}
+
+.bulk-purchase__hint {
+    opacity: .8;
+    font-size: 1.2rem;
+    line-height: 1.5;
+}
+.bulk-purchase__error, .bulk-purchase__validation { color: var(--text-loss-danger); }
+
+.bulk-purchase__results {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-normal);
+}
+
+.bulk-purchase__results ul {
+    padding-left: 2rem;
+}
+
+@media (width <= 600px) {
+    .bulk-purchase__backdrop { padding: 0; }
+
+    .bulk-purchase {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        box-sizing: border-box;
+        border-radius: 0;
+        padding: 1.6rem;
+    }
+}

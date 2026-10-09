@@ -39,6 +39,7 @@ import { LegacyGuide1pxIcon } from '@deriv/quill-icons/Legacy';
 import { Localize, localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import RunPanel from '../../components/run-panel';
+import BulkPurchase from '@/components/bulk-purchase/bulk-purchase';
 import ChartModal from '../chart/chart-modal';
 import Dashboard from '../dashboard';
 import RunStrategy from '../dashboard/run-strategy';
@@ -70,6 +71,8 @@ const AppWrapper = observer(() => {
         onCloseDialog,
         onOkButtonClick,
         stopBot,
+        is_running,
+        onStopButtonClick,
     } = run_panel;
     const { is_open } = quick_strategy;
     const { cancel_button_text, ok_button_text, title, message, dismissable, is_closed_on_cancel } = dialog_options as {
@@ -460,12 +463,20 @@ const AppWrapper = observer(() => {
             <DesktopWrapper>
                 <div className='main__run-strategy-wrapper'>
                     <RunStrategy />
+                    <BulkPurchase isBotRunning={is_running} onStopBot={onStopButtonClick} />
                     <RunPanel />
                 </div>
                 <ChartModal />
                 <TradingViewModal />
             </DesktopWrapper>
-            <MobileWrapper>{!is_open && <RunPanel />}</MobileWrapper>
+            <MobileWrapper>
+                {!is_open && (
+                    <>
+                        <BulkPurchase isBotRunning={is_running} onStopBot={onStopButtonClick} />
+                        <RunPanel />
+                    </>
+                )}
+            </MobileWrapper>
             <Dialog
                 cancel_button_text={cancel_button_text || localize('Cancel')}
                 className='dc-dialog__wrapper--fixed'

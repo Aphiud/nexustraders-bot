@@ -9,6 +9,7 @@
     "dev": "rsbuild dev --port 4003",
     "build": "rsbuild build",
     "test": "jest",
+    "lint": "stylelint src/components/bulk-purchase/bulk-purchase.scss",
     "type-check": "tsc --noEmit",
     "generate:brand-css": "node scripts/generate-brand-css.js",
     "prebuild": "node scripts/generate-brand-css.js"
@@ -23,6 +24,7 @@
     "@deriv/deriv-api": "^1.0.15",
     "@deriv/js-interpreter": "^3.0.0",
     "@deriv/quill-icons": "2.4.16",
+    "@netlify/identity": "^2.0.0",
     "@svgr/core": "^8.1.0",
     "@tanstack/react-query": "^5.29.2",
     "blockly": "^10.4.3",
@@ -116,6 +118,7 @@
     "sass-loader": "^14.2.1",
     "stylelint": "^16.3.1",
     "stylelint-config-standard-scss": "^13.1.0",
+    "stylelint-no-unsupported-browser-features": "^8.1.2",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
