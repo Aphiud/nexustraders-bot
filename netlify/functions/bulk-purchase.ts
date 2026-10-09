@@ -1,5 +1,5 @@
-import { getUser } from '@netlify/identity';
 import { readBulkPurchaseConfig } from './_bulk-purchase-config';
+import { getDerivUserAccounts } from './_deriv-user';
 
 const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), {
@@ -9,14 +9,13 @@ const json = (body: unknown, status = 200) =>
 
 export default async (request: Request) => {
     if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
-    const user = await getUser();
-    if (!user) return json({ error: 'Sign in to use Bulk Purchase.' }, 401);
-    if (!user.roles?.includes('bulk-purchase')) return json({ error: 'Bulk Purchase access is not enabled for this user.' }, 403);
 
     const config = readBulkPurchaseConfig();
     if (!config) {
         return json({ error: 'Bulk Purchase is not configured on the server. Contact the site administrator.' }, 503);
     }
+    const authorization = await getDerivUserAccounts(request);
+    if (!authorization.ok) return json({ error: authorization.message }, authorization.status);
 
     let input: unknown;
     try {
@@ -39,7 +38,8 @@ export default async (request: Request) => {
     ) return json({ error: 'Choose accounts and provide a non-empty contract-parameters object.' }, 400);
 
     const selected = accountIds.map(id => config.accounts.find(account => account.account_id === id));
-    if (selected.some(account => !account || account.account_type !== accountType)) {
+    const authorizedAccounts = new Map(authorization.accounts.map(account => [account.account_id, account.account_type]));
+    if (selected.some(account => !account || account.account_type !== accountType || authorizedAccounts.get(account.account_id) !== accountType)) {
         return json({ error: 'One or more selected accounts are unavailable for this environment.' }, 400);
     }
     const amount = (contractParameters as Record<string, unknown>).amount;

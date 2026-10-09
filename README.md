@@ -112,11 +112,11 @@ deployment does not receive these functions or secrets.
 
 ### Server configuration
 
-Enable Netlify Identity for the site and use invite-only registration. Grant the
-`bulk-purchase` Identity role only to trusted operators who are allowed to submit
-trades. The function checks that role on every account-list and purchase request.
-Configure these variables in Netlify's site environment, never as `NEXT_PUBLIC_*`
-variables:
+Users sign in once through the site's existing Deriv OAuth login. Each function
+validates that session with Deriv's authenticated Options accounts endpoint and
+limits the account list to accounts both owned by that Deriv login and configured
+on the server. No separate Netlify Identity login is used. Configure these
+variables in Netlify's site environment, never as `NEXT_PUBLIC_*` variables:
 
 ```env
 DERIV_BULK_PURCHASE_APP_ID=your_deriv_app_id
@@ -125,21 +125,24 @@ DERIV_BULK_PURCHASE_ACCOUNTS='[{"account_id":"VRTC1234567","label":"Demo account
 
 Each configured account needs its own trade-scoped Deriv PAT, paired with the
 account that PAT owns. The account list endpoint returns only account IDs,
-labels, and environment; it never returns a PAT. The purchase function builds
-Deriv's exact `contract_parameters` and `accounts` request body on the server and
-sends the `Deriv-App-ID` header. No OAuth bearer token is sent to Deriv's bulk
-endpoint. Deriv credentials are never logged. Configure values separately in
-each Netlify deploy context. Rotate a PAT in Deriv and update the corresponding
-server environment value if it is revoked or expires.
+labels, and environment; it never returns a PAT. The existing Deriv OAuth token
+is sent to the server function in the Authorization header so the function can
+verify account ownership with Deriv. That OAuth token is not forwarded to the
+bulk-purchase endpoint; the function submits the configured per-account PATs in
+Deriv's documented request body and sends the `Deriv-App-ID` header. Neither
+kind of token is logged or included in error messages. Configure values
+separately in each Netlify deploy context. Rotate a PAT in Deriv and update the
+corresponding server environment value if it is revoked or expires.
 
 ### Demo use
 
-After deployment, sign in with an invited Netlify Identity user assigned the
-`bulk-purchase` role. Choose **Demo**, select one or more configured demo
-accounts, and enter a JSON object containing the options contract parameters
-accepted by Deriv. The same contract is submitted to every selected account.
-The endpoint accepts 1–100 account/token pairs; it does not accept different
-contracts per account in a single request. Deriv validates the contract fields.
+Sign in with the site's Deriv login once, then open **Bulk Purchase** from the
+tab bar. Choose **Demo**, select one or more configured demo accounts that
+belong to your Deriv login, and enter a JSON object containing the options
+contract parameters accepted by Deriv. The same contract is submitted to every
+selected account. The endpoint accepts 1–100 account/token pairs; it does not
+accept different contracts per account in a single request. Deriv validates
+the contract fields.
 
 ### Real-account safety
 
@@ -152,19 +155,25 @@ account's contract activity before submitting again.
 
 ### Changed files
 
-- `netlify/functions/bulk-purchase.ts` validates the request, checks the
-  Identity role, injects server-only account PATs, calls the documented Deriv
-  endpoint once, and returns sanitized per-account results.
+- `netlify/functions/bulk-purchase.ts` validates the Deriv OAuth session and
+  account ownership, injects server-only account PATs, calls the documented
+  Deriv endpoint once, and returns sanitized per-account results.
 - `netlify/functions/bulk-purchase-accounts.ts` returns configured account
-  labels and IDs without exposing credentials.
+  labels and IDs that belong to the signed-in Deriv user, without exposing
+  credentials.
+- `netlify/functions/_deriv-user.ts` verifies the existing Deriv OAuth session
+  against Deriv's authenticated Options accounts API.
 - `netlify/functions/_bulk-purchase-config.ts` validates the server-only account
   mapping, PAT lengths, account types, and duplicate IDs for both functions.
-- `src/components/bulk-purchase/*` implements the UI, Identity login, validation,
-  real-account confirmation, duplicate-submit guard, and result display.
+- `src/components/bulk-purchase/*` implements the Bulk Purchase tab, existing
+  Deriv-session reuse, validation, real-account confirmation,
+  duplicate-submit guard, and result display.
 - `src/utils/bulk-purchase.ts` contains request and response validation shared by
   the UI and tests.
-- `src/pages/main/main.tsx` adds the control alongside the existing run controls
+- `src/pages/main/main.tsx` adds Bulk Purchase after Bot Builder in the tab bar
   without using or changing the bot WebSocket lifecycle.
+- `src/constants/bot-contents.ts` assigns the new tab and updates the existing
+  tab indexes and IDs.
 - `netlify.toml` enables the function directory, and this section documents its
   required server configuration and limitations.
 

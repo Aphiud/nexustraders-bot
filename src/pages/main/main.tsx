@@ -49,7 +49,7 @@ const ChartWrapper = lazy(() => import('../chart/chart-wrapper'));
 const Tutorial = lazy(() => import('../tutorials'));
 
 const AppWrapper = observer(() => {
-    const { connectionStatus } = useApiBase();
+    const { connectionStatus, activeLoginid } = useApiBase();
     const { dashboard, load_modal, run_panel, quick_strategy, summary_card, blockly_store } = useStore();
     const { is_loading } = blockly_store;
     const {
@@ -81,7 +81,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial'];
+    const hash = ['dashboard', 'bot_builder', 'bulk_purchase', 'chart', 'tutorial'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -408,6 +408,9 @@ const AppWrapper = observer(() => {
                                 }
                                 id='id-bot-builder'
                             />
+                            <div label={<Localize i18n_default_text='Bulk Purchase' />} id='id-bulk-purchase'>
+                                <BulkPurchase activeLoginid={activeLoginid} isBotRunning={is_running} onStopBot={onStopButtonClick} />
+                            </div>
                             <div
                                 label={
                                     <>
@@ -463,7 +466,6 @@ const AppWrapper = observer(() => {
             <DesktopWrapper>
                 <div className='main__run-strategy-wrapper'>
                     <RunStrategy />
-                    <BulkPurchase isBotRunning={is_running} onStopBot={onStopButtonClick} />
                     <RunPanel />
                 </div>
                 <ChartModal />
@@ -472,7 +474,6 @@ const AppWrapper = observer(() => {
             <MobileWrapper>
                 {!is_open && (
                     <>
-                        <BulkPurchase isBotRunning={is_running} onStopBot={onStopButtonClick} />
                         <RunPanel />
                     </>
                 )}

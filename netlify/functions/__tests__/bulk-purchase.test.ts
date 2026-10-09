@@ -1,10 +1,10 @@
-import { getUser } from '@netlify/identity';
 import purchaseHandler from '../bulk-purchase';
 import accountsHandler from '../bulk-purchase-accounts';
+import { getDerivUserAccounts } from '../_deriv-user';
 
-jest.mock('@netlify/identity', () => ({ getUser: jest.fn() }));
+jest.mock('../_deriv-user', () => ({ getDerivUserAccounts: jest.fn() }));
 
-const mockedGetUser = getUser as jest.MockedFunction<typeof getUser>;
+const mockedGetDerivUserAccounts = getDerivUserAccounts as jest.MockedFunction<typeof getDerivUserAccounts>;
 const configured = [
     { account_id: 'VRTC1', label: 'Demo one', account_type: 'demo', token: 'server-only-pat-demo' },
     { account_id: 'VRTC2', label: 'Demo two', account_type: 'demo', token: 'server-only-pat-demo-2' },
@@ -20,7 +20,11 @@ class TestResponse {
     async json() { return JSON.parse(this.value); }
     async text() { return this.value; }
 }
-const request = (body: unknown) => ({ method: 'POST', json: async () => body }) as unknown as Request;
+const request = (body: unknown, token = 'deriv-oauth-token') => ({
+    method: 'POST',
+    headers: { get: (name: string) => name.toLowerCase() === 'authorization' ? `Bearer ${token}` : null },
+    json: async () => body,
+}) as unknown as Request;
 
 describe('Netlify bulk purchase functions', () => {
     const originalAppId = process.env.DERIV_BULK_PURCHASE_APP_ID;
@@ -28,7 +32,11 @@ describe('Netlify bulk purchase functions', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        mockedGetUser.mockResolvedValue({ id: 'identity-user', roles: ['bulk-purchase'] } as never);
+        mockedGetDerivUserAccounts.mockResolvedValue({ ok: true, accounts: [
+            { account_id: 'VRTC1', account_type: 'demo' },
+            { account_id: 'VRTC2', account_type: 'demo' },
+            { account_id: 'CR1', account_type: 'real' },
+        ] });
         process.env.DERIV_BULK_PURCHASE_APP_ID = 'test-app-id';
         process.env.DERIV_BULK_PURCHASE_ACCOUNTS = JSON.stringify(configured);
         (global as any).Response = TestResponse;
@@ -42,11 +50,11 @@ describe('Netlify bulk purchase functions', () => {
         else process.env.DERIV_BULK_PURCHASE_ACCOUNTS = originalAccounts;
     });
 
-    it('rejects unauthenticated requests and users without the role', async () => {
-        mockedGetUser.mockResolvedValueOnce(null);
+    it('rejects unauthenticated requests and accounts not owned by the Deriv user', async () => {
+        mockedGetDerivUserAccounts.mockResolvedValueOnce({ ok: false, status: 401, message: 'Sign in with Deriv.' });
         expect((await purchaseHandler(request(requestBody))).status).toBe(401);
-        mockedGetUser.mockResolvedValueOnce({ id: 'ordinary-user', roles: [] } as never);
-        expect((await accountsHandler()).status).toBe(403);
+        mockedGetDerivUserAccounts.mockResolvedValueOnce({ ok: true, accounts: [{ account_id: 'CR1', account_type: 'real' }] });
+        expect((await purchaseHandler(request(requestBody))).status).toBe(400);
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
@@ -69,7 +77,7 @@ describe('Netlify bulk purchase functions', () => {
     });
 
     it('returns only account metadata and never exposes configured PATs', async () => {
-        const response = await accountsHandler();
+        const response = await accountsHandler(request({}));
         const text = await response.text();
         expect(response.status).toBe(200);
         expect(text).toContain('VRTC1');
