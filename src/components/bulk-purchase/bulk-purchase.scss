@@ -1,0 +1,104 @@
+.bulk-purchase {
+    width: min(74rem, calc(100% - 3.2rem));
+    margin: 2.4rem auto;
+    padding: 2.4rem;
+    border-radius: 1.2rem;
+    color: var(--text-general);
+    background: var(--general-main-1);
+    box-shadow: 0 1.2rem 4rem rgb(0 0 0 / 25%);
+}
+
+.bulk-purchase__header,
+.bulk-purchase__account {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.bulk-purchase__header h2 { margin: 0; }
+
+.bulk-purchase__content {
+    display: grid;
+    gap: 1.6rem;
+    margin-top: 1.6rem;
+}
+
+.bulk-purchase__content > label {
+    display: grid;
+    gap: .6rem;
+    font-weight: 600;
+}
+
+.bulk-purchase__content textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem;
+    border: 1px solid var(--border-normal);
+    border-radius: .6rem;
+    color: var(--text-general);
+    background: var(--general-main-1);
+    font: inherit;
+    font-family: monospace;
+    resize: vertical;
+}
+
+.bulk-purchase__content fieldset {
+    display: grid;
+    gap: .8rem;
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--border-normal);
+    border-radius: .6rem;
+}
+
+.bulk-purchase__content legend {
+    padding: 0 .5rem;
+    font-weight: 600;
+}
+
+.bulk-purchase__radio {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+.bulk-purchase__account { justify-content: flex-start; }
+
+.bulk-purchase__account small {
+    margin-left: auto;
+    opacity: .7;
+}
+
+.bulk-purchase__hint {
+    opacity: .8;
+    font-size: 1.2rem;
+    line-height: 1.5;
+}
+.bulk-purchase__error, .bulk-purchase__validation { color: var(--text-loss-danger); }
+
+.bulk-purchase__stop-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: .6rem;
+    background: var(--general-section-1);
+}
+
+.bulk-purchase__results {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-normal);
+}
+
+.bulk-purchase__results ul {
+    padding-left: 2rem;
+}
+
+@media (width <= 600px) {
+    .bulk-purchase {
+        width: calc(100% - 2rem);
+        margin: 1rem auto;
+        padding: 1.6rem;
+    }
+}

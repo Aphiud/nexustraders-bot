@@ -71,17 +71,24 @@ class APIBase {
     private readonly ENRICHMENT_TIMEOUT_MS = 10000; // 10 seconds
     private readonly MAX_RECONNECTION_ATTEMPTS = 5; // Maximum number of reconnection attempts before session reset
 
-    unsubscribeAllSubscriptions = () => {
-        this.current_auth_subscriptions?.forEach(subscription_promise => {
-            subscription_promise.then(({ subscription }) => {
-                if (subscription?.id) {
-                    this.api?.send({
-                        forget: subscription.id,
-                    });
-                }
-            });
-        });
+    unsubscribeAllSubscriptions = async () => {
+        const subscriptions = this.current_auth_subscriptions ?? [];
+
         this.current_auth_subscriptions = [];
+
+        await Promise.all(
+            subscriptions.map(async subscription_promise => {
+                try {
+                    const { subscription } = await subscription_promise;
+
+                    if (subscription?.unsubscribe) {
+                        subscription.unsubscribe();
+                    }
+                } catch (error) {
+                    console.warn('[DerivAPI] Error unsubscribing:', error);
+                }
+            })
+        );
     };
 
     onsocketopen() {
@@ -155,7 +162,7 @@ class APIBase {
         this.toggleRunButton(true);
 
         if (this.api) {
-            this.unsubscribeAllSubscriptions();
+            await this.unsubscribeAllSubscriptions();
         }
 
         // Reset reconnection attempts counter on successful connection initialization

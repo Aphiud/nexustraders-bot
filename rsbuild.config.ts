@@ -20,7 +20,9 @@ const smartchartsDist = path.join(
 export default defineConfig({
   plugins: [
     pluginSass({
-      sassLoaderOptions: { sourceMap: true },
+      // Use the already-installed JS Sass implementation instead of
+      // sass-embedded's Dart VM; the latter crashes on this macOS build host.
+      sassLoaderOptions: { implementation: require.resolve('sass'), sourceMap: true },
       exclude: /node_modules/,
     }),
     pluginReact(),
